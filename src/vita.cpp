@@ -201,7 +201,7 @@ static void pkgi_start_debug_log(void)
     sceNetInetPton(SCE_NET_AF_INET, "239.255.0.100", &addr.sin_addr);
 
     sceNetConnect(g_log_socket, (SceNetSockaddr*)&addr, sizeof(addr));
-    LOG("debug logging socket initialized");
+    LOG("depuracion de socket de loggin iniciado");
 #endif
 }
 
@@ -273,7 +273,7 @@ void pkgi_dialog_lock(void)
     int res = sceKernelLockLwMutex(&g_dialog_lock, 1, NULL);
     if (res < 0)
     {
-        LOG("dialog unlock failed error=0x%08x", res);
+        LOG("dialog unlock fallo, error=0x%08x", res);
     }
 }
 
@@ -282,7 +282,7 @@ void pkgi_dialog_unlock(void)
     int res = sceKernelUnlockLwMutex(&g_dialog_lock, 1);
     if (res < 0)
     {
-        LOG("dialog lock failed error=0x%08x", res);
+        LOG("dialog lock fallo, error=0x%08x", res);
     }
 }
 
@@ -437,7 +437,7 @@ void pkgi_dialog_input_text(const char* title, const char* text)
     int res = sceImeDialogInit(&param);
     if (res < 0)
     {
-        LOG("sceImeDialogInit failed, error 0x%08x", res);
+        LOG("sceImeDialogInit fallo, error 0x%08x", res);
     }
     else
     {
@@ -497,11 +497,11 @@ void pkgi_start(void)
 
     pkgi_start_debug_log();
 
-    LOG("initializing SSL");
+    LOG("iniciando SSL");
     sceSslInit(1024 * 1024);
-    LOG("initializing HTTP");
+    LOG("iniciando HTTP");
     sceHttpInit(1024 * 1024);
-    LOG("network initialized");
+    LOG("red iniciada");
 
     sceHttpsDisableOption(SCE_HTTPS_FLAG_SERVER_VERIFY);
 
@@ -537,7 +537,7 @@ void pkgi_start(void)
 
     if (scePromoterUtilityInit() < 0)
     {
-        LOG("cannot initialize promoter utility");
+        LOG("imposible iniciar utilidad de promover");
     }
 
     sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
@@ -567,9 +567,9 @@ void pkgi_start(void)
     g_time = sceKernelGetProcessTimeWide();
 
     sqlite3_rw_init();
-    LOG("start done");
+    LOG("empezar hecho");
 
-    LOG("Caching PSX content id to title id list");
+    LOG("Cacheando id contenido PSX a la lista de id titulo");
     pkgi_scan_pbps();
     
 }
@@ -714,7 +714,7 @@ void pkgi_delete_dir(const std::string& path)
 
     if (dfd < 0)
         throw formatEx<std::runtime_error>(
-                "failed sceIoDopen({}):\n{:#08x}",
+                "sceIoDopen({}) fallo:\n{:#08x}",
                 path,
                 static_cast<uint32_t>(dfd));
 
@@ -744,7 +744,7 @@ void pkgi_delete_dir(const std::string& path)
             const auto ret = sceIoRemove(new_path.c_str());
             if (ret < 0)
                 throw formatEx<std::runtime_error>(
-                        "failed sceIoRemove({}):\n{:#08x}",
+                        "sceIoRemove({}) fallo:\n{:#08x}",
                         new_path,
                         static_cast<uint32_t>(ret));
         }
@@ -756,7 +756,7 @@ void pkgi_delete_dir(const std::string& path)
     res = sceIoRmdir(path.c_str());
     if (res < 0)
         throw formatEx<std::runtime_error>(
-                "failed sceIoRmdir({}):\n{:#08x}",
+                "sceIoRmdir({}) fallo:\n{:#08x}",
                 path,
                 static_cast<uint32_t>(res));
 }
@@ -780,7 +780,7 @@ void pkgi_start_thread(const char* name, pkgi_thread_entry* start)
             name, &pkgi_vita_thread, 0x40, 1024 * 1024, 0, 0, NULL);
     if (id < 0)
     {
-        LOG("failed to start %s thread", name);
+        LOG("fallo al iniciar hilo %s", name);
     }
     else
     {
@@ -797,10 +797,10 @@ void pkgi_lock_process(void)
 {
     if (__atomic_fetch_add(&g_power_lock, 1, __ATOMIC_SEQ_CST) == 0)
     {
-        LOG("locking shell functionality");
+        LOG("funcionalidad locking shell");
         if (sceShellUtilLock(SCE_SHELL_UTIL_LOCK_TYPE_PS_BTN) < 0)
         {
-            LOG("sceShellUtilLock failed");
+            LOG("sceShellUtilLock fallo");
         }
     }
 }
@@ -809,10 +809,10 @@ void pkgi_unlock_process(void)
 {
     if (__atomic_sub_fetch(&g_power_lock, 1, __ATOMIC_SEQ_CST) == 0)
     {
-        LOG("unlocking shell functionality");
+        LOG("funcionalidad unlocking shell");
         if (sceShellUtilUnlock(SCE_SHELL_UTIL_LOCK_TYPE_PS_BTN) < 0)
         {
-            LOG("sceShellUtilUnlock failed");
+            LOG("sceShellUtilUnlock fallo");
         }
     }
 }
@@ -823,7 +823,7 @@ pkgi_texture pkgi_load_png_raw(const void* data, uint32_t size)
     vita2d_texture* tex = vita2d_load_PNG_buffer((const char*)data);
     if (!tex)
     {
-        LOG("failed to load texture");
+        LOG("fallo al cargar textura");
     }
     return tex;
 }
@@ -877,7 +877,7 @@ std::string pkgi_get_system_version()
         const auto res = _vshSblGetSystemSwVersion(&info);
         if (res < 0)
             throw std::runtime_error(fmt::format(
-                    "sceKernelGetSystemSwVersion failed: {:#08x}",
+                    "sceKernelGetSystemSwVersion fallo: {:#08x}",
                     static_cast<uint32_t>(res)));
         return std::string(info.versionString);
     }();

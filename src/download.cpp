@@ -53,9 +53,9 @@ Download::Download(std::unique_ptr<Http> http) : _http(std::move(http))
 
 void Download::download_start(void)
 {
-    LOGF("resuming pkg download from {} offset", download_offset);
+    LOGF("reanudar descarga de pkg desde offset {}", download_offset);
     info_update = pkgi_time_msec() + 1000;
-    update_status("Downloading");
+    update_status("Descargando");
 }
 
 void Download::update_progress()
@@ -100,7 +100,7 @@ static void rc_init(
     if (in_len < 5)
     {
         throw DownloadError(
-                "internal error - lzrc input underflow! pkg may be corrupted");
+                "error interno - lzrc desbordado! el pkg estara corrupto");
     }
 
     rc->input = static_cast<const uint8_t*>(in);
@@ -252,8 +252,8 @@ static int lzrc_decompress(void* out, int out_len, const void* in, int in_len)
             if (rc.out_ptr == rc.out_len)
             {
                 throw DownloadError(
-                        "internal error - lzrc output overflow! pkg may be "
-                        "corrupted");
+                        "error interno - lzrc desbordado! el pkg estara "
+                        "corrupto");
             }
             rc.output[rc.out_ptr++] = (uint8_t)byte;
             last_byte = (uint8_t)byte;
@@ -320,15 +320,15 @@ static int lzrc_decompress(void* out, int out_len, const void* in, int in_len)
             if (match_dist > rc.out_ptr)
             {
                 throw DownloadError(
-                        "internal error - lzrc match_dist out of range! pkg "
-                        "may be corrupted");
+                        "error interno - lzrc match_dist fuera de rango! el "
+                        "pkg estara corrupto");
             }
 
             if (rc.out_ptr + match_len + 1 > rc.out_len)
             {
                 throw DownloadError(
-                        "internal error - lzrc output overflow! pkg may be "
-                        "corrupted");
+                        "error interno - lzrc desbordado! el pkg estara "
+                        "corrupto");
             }
 
             const uint8_t* match_src = rc.output + rc.out_ptr - match_dist;
@@ -385,7 +385,7 @@ void Download::download_data(
         uint8_t* buffer, uint32_t size, int encrypted, int save)
 {
     if (is_canceled())
-        throw std::runtime_error("download was canceled");
+        throw std::runtime_error("descarga cancelada");
 
     if (size == 0)
         return;
@@ -394,18 +394,18 @@ void Download::download_data(
 
     if (!*_http)
     {
-        LOGF("requesting {} @ {}", download_url, download_offset);
+        LOGF("solicitando {} @ {}", download_url, download_offset);
         _http->start(download_url, download_offset);
 
         const int64_t http_length = _http->get_length();
         if (http_length < 0)
         {
-            throw DownloadError("HTTP response has unknown length");
+            throw DownloadError("Longitud desconocida en respuesta HTTP");
         }
 
         download_size = http_length + download_offset;
 
-        LOGF("http response length = {}, total pkg size = {}",
+        LOGF("longitud respuesta http = {}, tamaño total pkg = {}",
              http_length,
              download_size);
         info_start = pkgi_time_msec();
@@ -418,7 +418,7 @@ void Download::download_data(
         {
             const int read = _http->read(buffer + pos, size - pos);
             if (read == 0)
-                throw DownloadError("HTTP connection closed");
+                throw DownloadError("conexion HTTP cerrada");
             pos += read;
         }
     }
@@ -447,7 +447,7 @@ void Download::download_data(
         }
 
         if (!pkgi_write(item_file, buffer, write))
-            throw formatEx<DownloadError>("failed to write to {}", item_path);
+            throw formatEx<DownloadError>("error al escribir en {}", item_path);
     }
 }
 
@@ -455,7 +455,7 @@ void Download::skip_to_file_offset(uint64_t to_offset)
 {
     if (to_offset < encrypted_offset)
         throw DownloadError(
-                fmt::format("can't seek backward to {}", to_offset));
+                fmt::format("imposible buscar atras en {}", to_offset));
 
     std::vector<uint8_t> down(64 * 1024);
     while (encrypted_offset != to_offset)
@@ -480,25 +480,25 @@ void Download::create_file()
 
     pkgi_mkdirs(folder.c_str());
 
-    LOGF("creating {} file", item_name);
+    LOGF("creando archivo {}", item_name);
     item_file = pkgi_create(item_path.c_str());
     if (!item_file)
-        throw formatEx<DownloadError>("cannot create file {}", item_name);
+        throw formatEx<DownloadError>("imposible crear archivo {}", item_name);
 }
 
 void Download::open_file()
 {
-    LOGF("opening {} file for resume", item_name);
+    LOGF("abriendo archivo {} para reanudar", item_name);
     item_file = pkgi_openrw(item_path.c_str());
     if (!item_file)
-        throw formatEx<DownloadError>("cannot create file {}", item_name);
+        throw formatEx<DownloadError>("imposible crear archivo {}", item_name);
 }
 
 int Download::download_head(const uint8_t* rif)
 {
-    LOG("downloading pkg head");
+    LOG("descargando head de pkg");
 
-    item_name = "Preparing...";
+    item_name = "Preparando...";
     item_path = fmt::format("{}/sce_sys/package/head.bin", root);
 
     BOOST_SCOPE_EXIT_ALL(&)
@@ -519,14 +519,14 @@ int Download::download_head(const uint8_t* rif)
         get32be(head.data() + PKG_HEADER_SIZE) !=
                 0x7F657874) // this check breaks pkg type1
     {
-        throw DownloadError("wrong pkg header");
+        throw DownloadError("header de pkg incorrecto");
     }
 
     // contentid is at 0x50 for psm games
     if (rif && !(pkgi_memequ(rif + 0x10, head.data() + 0x30, 0x30) ||
                  pkgi_memequ(rif + 0x50, head.data() + 0x30, 0x30)))
     {
-        throw DownloadError("zRIF content id doesn't match pkg");
+        throw DownloadError("ID contenido zRIF no coincide con pkg");
     }
 
     const auto meta_offset = get32be(head.data() + 8);
@@ -571,7 +571,7 @@ int Download::download_head(const uint8_t* rif)
         aes128_encrypt(&ctx, iv, key);
     }
     else
-        throw DownloadError("invalid key type " + std::to_string(key_type));
+        throw DownloadError("tipo de key invalida " + std::to_string(key_type));
 
     aes128_ctr_init(&aes, key);
 
@@ -589,7 +589,7 @@ int Download::download_head(const uint8_t* rif)
     {
         if (offset + 16 >= enc_offset)
         {
-            throw DownloadError("pkg file is too small or corrupted");
+            throw DownloadError("pkg muy pequeño o corrupto");
         }
 
         uint32_t type = get32be(head.data() + offset + 0);
@@ -609,7 +609,7 @@ int Download::download_head(const uint8_t* rif)
                 content_type != CONTENT_TYPE_PSV_DLC)
             {
                 throw DownloadError(
-                        "unsupported package type: " +
+                        "tipo de paquete no soportado: " +
                         std::to_string(content_type));
             }
         }
@@ -636,9 +636,9 @@ int Download::download_head(const uint8_t* rif)
     if (index_size && item_offset != index_size)
     {
         throw DownloadError(
-                "assertion error: read-ahead mismatch, expected: " +
+                "asercion falloo: read-ahead no coincide, esperado: " +
                 std::to_string(index_size) +
-                ", got: " + std::to_string(item_offset));
+                ", obtuvo: " + std::to_string(item_offset));
     }
 
     const auto target_size = (uint32_t)(enc_offset + item_offset);
@@ -649,7 +649,7 @@ int Download::download_head(const uint8_t* rif)
             0,
             1);
 
-    LOG("head.bin downloaded");
+    LOG("head.bin descargado");
     return 1;
 }
 
@@ -672,19 +672,19 @@ void Download::download_file_content(uint64_t encrypted_size)
 void Download::download_file_content_to_iso(uint64_t item_size)
 {
     if (item_size < 0x28)
-        throw DownloadError("eboot.pbp file is too small");
+        throw DownloadError("eboot.pbp muy pequeño");
 
     uint8_t eboot_header[0x28];
     download_data(eboot_header, sizeof(eboot_header), 1, 0);
 
     if (memcmp(eboot_header, "\x00PBP", 4) != 0)
-        throw DownloadError("wrong eboot.pbp header magic");
+        throw DownloadError("header magico de eboot.pbp equivocado");
 
     uint32_t const psar_offset = get32le(eboot_header + 0x24);
     if (psar_offset + 256 > item_size)
-        throw DownloadError("eboot.pbp file is to short");
+        throw DownloadError("eboot.pbp es muy corto");
     if (psar_offset % 16 != 0)
-        throw DownloadError("psar_offset is not aligned");
+        throw DownloadError("psar_offset no esta alineado");
 
     skip_to_file_offset(psar_offset);
 
@@ -692,12 +692,12 @@ void Download::download_file_content_to_iso(uint64_t item_size)
     download_data(psar_header.data(), psar_header.size(), 1, 0);
 
     if (memcmp(psar_header.data(), "NPUMDIMG", 8) != 0)
-        throw DownloadError("wrong data.psar header magic");
+        throw DownloadError("header magico de data.psar equivocado");
 
     uint32_t const iso_block = get32le(psar_header.data() + 0x0c);
     if (iso_block > 16)
         throw DownloadError(fmt::format(
-                "unsupported data.psar block size %u, max %u supported",
+                "Tam. bloque data.psar no soportado %u, max %u soportados",
                 iso_block,
                 16));
 
@@ -717,7 +717,7 @@ void Download::download_file_content_to_iso(uint64_t item_size)
     uint32_t iso_table = get32le(psar_header.data() + 0x6c);
 
     if (iso_table + block_count * 32 > item_size)
-        throw DownloadError("offset table in data.psar file is too large");
+        throw DownloadError("tabla de offset en data.psar muy largo");
 
     uint64_t const table_offset = psar_offset + iso_table;
     skip_to_file_offset(table_offset);
@@ -740,7 +740,7 @@ void Download::download_file_content_to_iso(uint64_t item_size)
 
         if (psar_offset + block_size > item_size)
             throw DownloadError(fmt::format(
-                    "iso block size/offset is to large: {} > {}",
+                    "el tam/offset del iso es muy largo: {} > {}",
                     psar_offset + block_size,
                     item_size));
 
@@ -764,7 +764,7 @@ void Download::download_file_content_to_iso(uint64_t item_size)
         {
             if (!pkgi_write(item_file, data.data(), block_size))
                 throw DownloadError(
-                        fmt::format("failed to write to %s", item_path));
+                        fmt::format("fallo al escribir en %s", item_path));
         }
         else
         {
@@ -777,12 +777,12 @@ void Download::download_file_content_to_iso(uint64_t item_size)
             if (out_size != int(iso_block) * ISO_SECTOR_SIZE)
             {
                 throw DownloadError(
-                        "internal error - lzrc decompression failed! "
-                        "pkg may be corrupted");
+                        "error interno - la descompresion lzrc "
+                        "fallo. El pkg estara corrupto");
             }
             if (!pkgi_write(item_file, uncompressed.data(), out_size))
                 throw DownloadError(
-                        fmt::format("failed to write to %s", item_path));
+                        fmt::format("fallo al escribir en %s", item_path));
         }
     }
 
@@ -792,7 +792,7 @@ void Download::download_file_content_to_iso(uint64_t item_size)
 void Download::download_file_content_to_edat(uint64_t item_size)
 {
     if (item_size < 0x90 + 0xa0)
-        throw DownloadError("EDAT file is too short");
+        throw DownloadError("archivo EDAT muy corto");
 
     uint8_t item_header[0x5a];
     download_data(item_header, sizeof(item_header), 1, 0);
@@ -804,13 +804,13 @@ void Download::download_file_content_to_edat(uint64_t item_size)
     download_data(key_header, sizeof(key_header), 1, 0);
 
     if (memcmp(key_header, "\x00PGD", 4) != 0)
-        throw DownloadError("wrong EDAT header magic");
+        throw DownloadError("header magico de EDAT equivocado");
 
     uint32_t key_index = get32le(key_header + 4);
     uint32_t drm_type = get32le(key_header + 8);
 
     if (key_index != 1 || drm_type != 1)
-        throw DownloadError("unsupported EDAT file, key/drm type is wrong");
+        throw DownloadError("EDAT no soportado, tipo de key/drm esta mal");
 
     uint8_t mac[16];
     aes128_cmac(kirk7_key38, key_header, 0x70, mac);
@@ -824,7 +824,7 @@ void Download::download_file_content_to_edat(uint64_t item_size)
     uint32_t data_offset = get32le(key_header + 0x4c);
 
     if (data_offset != 0x90)
-        throw DownloadError("unsupported EDAT file, data/offset is wrong");
+        throw DownloadError("EDAT no soportado, datos/offset esta mal");
 
     init_psp_decrypt(&psp_key, psp_iv, 0, mac, key_header, 0x70, 0x30);
 
@@ -850,20 +850,20 @@ void Download::download_file_content_to_edat(uint64_t item_size)
         {
             if (!pkgi_write(item_file, data.data(), data.size()))
                 throw DownloadError(
-                        fmt::format("failed to write to %s", item_path));
+                        fmt::format("fallo al escribir en %s", item_path));
             data.clear();
             data.reserve(flush_size);
         }
     }
 
     if (!pkgi_write(item_file, data.data(), data.size()))
-        throw DownloadError(fmt::format("failed to write to %s", item_path));
+        throw DownloadError(fmt::format("fallo al escribir en %s", item_path));
     skip_to_file_offset(item_size);
 }
 
 int Download::download_files(void)
 {
-    LOG("downloading encrypted files");
+    LOG("descargando archivos encriptados");
 
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -877,7 +877,7 @@ int Download::download_files(void)
     for (; item_index < index_count; ++item_index)
     {
         if (is_canceled())
-            throw std::runtime_error("download was canceled");
+            throw std::runtime_error("descarga cancelada");
 
         uint8_t item[32];
         pkgi_memcpy(
@@ -893,7 +893,7 @@ int Download::download_files(void)
         const uint8_t type = item[27];
 
         if (enc_offset + name_offset + name_size > total_size)
-            throw DownloadError("pkg file is too small or corrupted");
+            throw DownloadError("archivo pkg muy pequeño o corrupto");
 
         {
             std::vector<uint8_t> item_name_v(
@@ -986,20 +986,20 @@ int Download::download_files(void)
         {
             open_file();
             if (pkgi_seek(item_file, encrypted_offset) < 0)
-                throw ResumeError("failed to seek for resume");
+                throw ResumeError("fallo al buscar para reanudar");
         }
         else
             create_file();
 
         if (enc_offset + item_offset + encrypted_offset != download_offset)
             throw formatEx<DownloadError>(
-                    "pkg is not supported, file offset mismatch, "
-                    "expected: {}, actual: {}",
+                    "pkg no soportado offset no coincide, "
+                    "esperado: {}, actual: {}",
                     enc_offset + item_offset + encrypted_offset,
                     +download_offset);
 
         if (enc_offset + item_offset + item_size > total_size)
-            throw DownloadError("pkg file is too small or corrupted");
+            throw DownloadError("pkg muy pequeño o corrupto");
 
         if (content_type == CONTENT_TYPE_PSP_GAME ||
             content_type == CONTENT_TYPE_PSP_GAME_ALT ||
@@ -1031,13 +1031,13 @@ int Download::download_files(void)
         resuming = false;
     }
 
-    LOG("all files decrypted");
+    LOG("todos los archivos desencriptados");
     return 1;
 }
 
 int Download::download_tail(void)
 {
-    LOG("downloading tail.bin");
+    LOG("descargando tail.bin");
 
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -1048,7 +1048,7 @@ int Download::download_tail(void)
         }
     };
 
-    item_name = "Finishing...";
+    item_name = "Terminando...";
     item_path = fmt::format("{}/sce_sys/package/tail.bin", root);
 
     create_file();
@@ -1070,7 +1070,7 @@ int Download::download_tail(void)
                 down.data(), read, 0, content_type != CONTENT_TYPE_PSX_GAME);
     }
 
-    LOG("tail.bin downloaded");
+    LOG("tail.bin descargado");
     return 1;
 }
 
@@ -1078,91 +1078,91 @@ int Download::check_integrity(const uint8_t* digest)
 {
     if (!digest)
     {
-        LOG("no integrity provided, skipping check");
+        LOG("no hay integridad, saltando verificacion");
         return 1;
     }
 
     uint8_t check[SHA256_DIGEST_SIZE];
     sha256_finish(&sha, check);
 
-    LOG("checking integrity of pkg");
+    LOG("comprobando integridad del pkg");
     if (!pkgi_memequ(digest, check, SHA256_DIGEST_SIZE))
     {
-        LOG("pkg integrity is wrong, removing head.bin & resume data");
+        LOG("integridad equivocada, eliminando head.bin y reanudando datos");
 
         pkgi_rm(fmt::format("{}/sce_sys/package/head.bin", root).c_str());
 
-        throw DownloadError("pkg integrity failed, try downloading again");
+        throw DownloadError("integridad del pkg fallo, descargalo de nuevo");
     }
 
-    LOG("pkg integrity check succeeded");
+    LOG("comprobar integridad de pkg realizada");
     return 1;
 }
 
 int Download::create_stat()
 {
-    LOG("creating stat.bin");
-    update_status("Creating stat.bin");
+    LOG("creando stat.bin");
+    update_status("Creando stat.bin");
 
     const auto path = fmt::format("{}/sce_sys/package/stat.bin", root);
 
     uint8_t stat[768] = {0};
     pkgi_save(path.c_str(), stat, sizeof(stat));
 
-    LOG("stat.bin created");
+    LOG("stat.bin creado");
     return 1;
 }
 
 int Download::create_rif(const uint8_t* rif)
 {
-    LOG("creating work.bin");
-    update_status("Creating work.bin");
+    LOG("creando work.bin");
+    update_status("Creando work.bin");
 
     const auto path = fmt::format("{}/sce_sys/package/work.bin", root);
 
     pkgi_save(path.c_str(), rif, PKGI_RIF_SIZE);
 
-    LOG("work.bin created");
+    LOG("work.bin creado");
     return 1;
 }
 
 int Download::create_psm_rif(const uint8_t* rif)
 {
-    LOG("creating RO/License");
-    update_status("Creating RO/License");
+    LOG("creando RO/License");
+    update_status("Creando RO/License");
     const auto folder = fmt::format("{}/RO/License", root);
     pkgi_mkdirs(folder.c_str());
 
-    LOG("creating work.bin");
-    update_status("Creating work.bin");
+    LOG("creando work.bin");
+    update_status("Creando work.bin");
 
     const auto path = fmt::format("{}/RO/License/FAKE.rif", root);
 
     pkgi_save(path.c_str(), rif, PKGI_PSM_RIF_SIZE);
 
-    LOG("FAKE.rif created");
+    LOG("FAKE.rif creado");
     return 1;
 }
 
 int Download::adjust_psm_files(void)
 {
-    update_status("Creating additional psm files");
-    LOG("Removing sce_sys");
+    update_status("Creando arch. adicionales de psm");
+    LOG("Eliminando sce_sys");
     const auto sce_sys = fmt::format("{}/sce_sys", root);
     pkgi_delete_dir(sce_sys);
 
     const auto documents = fmt::format("{}/RW/Documents", root);
     pkgi_mkdirs(documents.c_str());
 
-    LOG("creating RW/Temp");
+    LOG("creando RW/Temp");
     const auto temp = fmt::format("{}/RW/Temp", root);
     pkgi_mkdirs(temp.c_str());
 
-    LOG("creating RW/System");
+    LOG("creando RW/System");
     const auto system = fmt::format("{}/RW/System", root);
     pkgi_mkdirs(system.c_str());
 
-    LOG("creating RW/System/content_id");
+    LOG("creando RW/System/content_id");
     char content_data[0x30];
     if (strlen(download_content) >= sizeof(content_data))
         return 0;
@@ -1171,7 +1171,7 @@ int Download::adjust_psm_files(void)
     const auto content_id = fmt::format("{}/RW/System/content_id", root);
     pkgi_save(content_id.c_str(), content_data, 0x30);
 
-    LOG("creating RW/System/pm.dat");
+    LOG("creando RW/System/pm.dat");
     const auto pm_dat = fmt::format("{}/RW/System/pm.dat", root);
     std::vector<uint8_t> pm_data(1 << 16);
     pkgi_save(pm_dat.c_str(), pm_data.data(), pm_data.size());
@@ -1187,11 +1187,11 @@ int Download::pkgi_download(
         const uint8_t* digest)
 {
     root = fmt::format("{}pkgj/{}", partition, content);
-    LOGF("temp installation folder: {}", root);
+    LOGF("carp. instalacion temporal: {}", root);
 
     try
     {
-        update_status("Downloading");
+        update_status("Descargando");
         sha256_init(&sha);
 
         resuming = false;
@@ -1266,7 +1266,7 @@ int Download::pkgi_download(
     }
     catch (const ResumeError& e)
     {
-        LOGF("deleting resume file");
+        LOGF("borrando arch. para reanudar");
         try
         {
             pkgi_rm(fmt::format("{}.resume", root).c_str());
@@ -1274,7 +1274,7 @@ int Download::pkgi_download(
         }
         catch (const std::exception& e)
         {
-            LOGF("failed to delete resume file");
+            LOGF("error al borrar arch. para reanudar");
         }
         throw;
     }
@@ -1318,7 +1318,7 @@ void Download::deserialize_state()
 
     try
     {
-        LOG("download resume file found");
+        LOG("arch. para reanudar descarga encontrado");
 
         const auto head_path = fmt::format("{}/sce_sys/package/head.bin", root);
         head = pkgi_load(head_path);
@@ -1329,7 +1329,7 @@ void Download::deserialize_state()
         uint8_t version;
         iarchive(version);
         if (version != 1)
-            throw std::runtime_error("invalid resume data version");
+            throw std::runtime_error("version de datos para reanudar invalidos");
 
         iarchive(save_as_iso);
         iarchive(download_offset, download_size);
@@ -1353,11 +1353,11 @@ void Download::deserialize_state()
 
         resuming = true;
 
-        LOGF("resuming download from {}/{}", download_offset, download_size);
+        LOGF("reanudando descarga desde {}/{}", download_offset, download_size);
     }
     catch (const std::exception& e)
     {
         throw formatEx<ResumeError>(
-                "can't resume download:\n{}\nResume data deleted.", e.what());
+                "imposible reanudar descarga:\n{}\nDatos para reanudar eliminados.", e.what());
     }
 }

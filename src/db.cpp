@@ -23,17 +23,17 @@ std::string pkgi_mode_to_string(Mode mode)
 #define RET(mode, str) \
     case Mode##mode:   \
         return str
-        RET(Games, "PSV games");
-        RET(Dlcs, "PSV DLCs");
-        RET(Demos, "PSV demos");
-        RET(Themes, "PSV themes");
-        RET(PsmGames, "PSM games");
-        RET(PsxGames, "PS1 games");
-        RET(PspGames, "PSP games");
-        RET(PspDlcs, "PSP DLCs");
+        RET(Games, "Juegos PS Vita");
+        RET(Dlcs, "DLCs PS Vita");
+        RET(Demos, "Demos PS Vita");
+        RET(Themes, "Temas PS Vita");
+        RET(PsmGames, "Juegos PSM");
+        RET(PsxGames, "Juegos PS1");
+        RET(PspGames, "Juegos PSP");
+        RET(PspDlcs, "DLCs PSP");
 #undef RET
     }
-    return "unknown mode";
+    return "Modo desconocido";
 }
 
 TitleDatabase::TitleDatabase(const std::string& dbPath) : _dbPath(dbPath)
@@ -62,7 +62,7 @@ static const char* pkgi_mode_to_file_name(Mode mode)
         return "titles_psxgames.tsv";
     }
     throw formatEx<std::runtime_error>(
-            "unknown mode {}", static_cast<int>(mode));
+            "Modo desconocido {}", static_cast<int>(mode));
 }
 
 namespace
@@ -134,7 +134,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, 10);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModeDlcs:
         switch (column)
@@ -151,7 +151,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModeDemos:
         switch (column)
@@ -168,7 +168,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, 10);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModeThemes:
         switch (column)
@@ -185,7 +185,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModePsmGames:
         switch (column)
@@ -202,7 +202,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModePsxGames:
         switch (column)
@@ -219,7 +219,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(FwVersion, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModePspGames:
         switch (column)
@@ -236,7 +236,7 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(Zrif, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     case ModePspDlcs:
         switch (column)
@@ -253,10 +253,10 @@ int pkgi_get_column_number(Mode mode, Column column)
             MAP_COL(Zrif, -1);
             MAP_COL(AppVersion, -1);
         default:
-            throw std::runtime_error("invalid column");
+            throw std::runtime_error("columna invalida");
         }
     default:
-        throw std::runtime_error("invalid mode");
+        throw std::runtime_error("modo invalido");
     }
 #undef MAP_COL
 }
@@ -285,7 +285,7 @@ void TitleDatabase::update(Mode mode, Http* http, const std::string& update_url)
     db_total = 0;
     db_size = 0;
 
-    LOGF("loading update from {}", update_url);
+    LOGF("cargando update desde {}", update_url);
 
     http->start(update_url, 0);
 
@@ -303,11 +303,11 @@ void TitleDatabase::update(Mode mode, Http* http, const std::string& update_url)
 
     if (db_size == 0)
         throw std::runtime_error(
-                "list is empty... check for newer pkgj version");
+                "lista vacia... mira una nueva version de pkgj");
     if (db_size != db_total)
         throw std::runtime_error(
-                "TSV file is truncated, check your Internet connection and "
-                "retry");
+                "Archivo TSV truncado, comprueba tu conexion a Internet e "
+                "intentalo de nuevo.");
 
     pkgi_close(item_file);
     item_file = nullptr;
@@ -317,7 +317,7 @@ void TitleDatabase::update(Mode mode, Http* http, const std::string& update_url)
 
     pkgi_rename(tmppath, filepath);
 
-    LOG("finished downloading");
+    LOG("descarga finalizada");
 }
 
 namespace
@@ -335,7 +335,7 @@ const char* region_to_string(GameRegion region)
     case RegionUSA:
         return "US";
     default:
-        throw std::runtime_error(fmt::format("unknown region {}", (int)region));
+        throw std::runtime_error(fmt::format("region desconocida {}", (int)region));
     }
 }
 
@@ -371,7 +371,7 @@ bool lower(const DbItem& a, const DbItem& b, DbSort sort, DbSortOrder order)
         cmp = a.date.compare(b.date);
     else
         throw std::runtime_error(
-                fmt::format("unknown sort order {}", (int)sort));
+                fmt::format("orden desconocido {}", (int)sort));
 
     if (cmp == 0)
         cmp = a.titleid.compare(b.titleid);
@@ -495,7 +495,7 @@ void TitleDatabase::reload(
         catch (const std::exception& e)
         {
             throw formatEx<std::runtime_error>(
-                    "failed to parse line {}: {}", line, e.what());
+                    "fallo al parsear linea {}: {}", line, e.what());
         }
     }
 
@@ -505,7 +505,7 @@ void TitleDatabase::reload(
             [&](const auto& a, const auto& b)
             { return lower(a, b, sort_by, sort_order); });
 
-    LOGF("reloaded {}/{} items", db.size(), _title_count);
+    LOGF("recargados {}/{} objetos", db.size(), _title_count);
 }
 
 void TitleDatabase::get_update_status(uint32_t* updated, uint32_t* total)

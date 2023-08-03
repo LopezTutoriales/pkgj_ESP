@@ -161,7 +161,7 @@ void init_download_class(scedownload_class* sceDownloadObj)
 
     if (res != 0xc4)
         throw formatEx<std::runtime_error>(
-                "SceIpmi_4E255C31 failed: {:#08x}", static_cast<uint32_t>(res));
+                "SceIpmi_4E255C31 fallo: {:#08x}", static_cast<uint32_t>(res));
 
     sceDownloadObj->class_header = (scedownload_class_header*)new char[0x18]();
 
@@ -176,7 +176,7 @@ void init_download_class(scedownload_class* sceDownloadObj)
             sceDownloadObj->class_header->buf10000);
     if (res != 0)
         throw formatEx<std::runtime_error>(
-                "SceIpmi_B282B430 init failed: {:#08x}",
+                "SceIpmi_B282B430 init fallo: {:#08x}",
                 static_cast<uint32_t>(res));
 
     sceDownloadObj->init =
@@ -192,7 +192,7 @@ void init_download_class(scedownload_class* sceDownloadObj)
             2);
     if (res != 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload init failed: {:#08x}", static_cast<uint32_t>(res));
+                "SceDownload init fallo: {:#08x}", static_cast<uint32_t>(res));
 }
 
 void scedownload_start_with_rif(
@@ -243,19 +243,19 @@ void scedownload_start_with_rif(
 
     if (res < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload change_state failed: {:#08x}",
+                "SceDownload change_state fallo: {:#08x}",
                 static_cast<uint32_t>(res));
     if (result < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload change_state result failed: {:#08x}",
+                "SceDownload change_state result fallo: {:#08x}",
                 static_cast<uint32_t>(result));
     if (bgdlid < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload change_state bgdlid failed: {:#08x}",
+                "SceDownload change_state bgdlid fallo: {:#08x}",
                 static_cast<uint32_t>(res));
     if (reinterpret_cast<intptr_t>(params.init.addr_DC0) < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload change_state DC0 failed: {:#08x}",
+                "SceDownload change_state DC0 fallo: {:#08x}",
                 reinterpret_cast<uintptr_t>(params.init.addr_DC0));
 
     result = 0;
@@ -270,11 +270,11 @@ void scedownload_start_with_rif(
             sceDownloadObj->class_header->func_table, 0x12340007, 0, 0, params);
     if (res < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload second change_state failed: {:#08x}",
+                "SceDownload second change_state fallo: {:#08x}",
                 static_cast<uint32_t>(res));
     if (result < 0)
         throw formatEx<std::runtime_error>(
-                "SceDownload second change_state result failed: {:#08x}",
+                "SceDownload second change_state result fallo: {:#08x}",
                 static_cast<uint32_t>(result));
     buf_dc0.clear();
     buf_2e0.clear();
@@ -311,9 +311,9 @@ void pkgi_start_bgdl(
 {
     if (pkgi_list_dir_contents("ux0:bgdl/t").size() >= 32)
         throw std::runtime_error(
-                "There are too many pending installation on your device, "
-                "install them from LiveArea's notifications or delete them to "
-                "be able to download more.");
+                "Hay muchas instalaciones pendientes en tu PS Vita, "
+                "instalalos desde las notificaciones del LiveArea o borralos "
+                "para poder descargar mas.");
 
     static auto example_class = new_scedownload();
     std::string license_path = "ux0:bgdl/temp.dat";

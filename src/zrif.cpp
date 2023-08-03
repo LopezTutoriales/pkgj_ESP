@@ -159,19 +159,19 @@ static uint32_t zlib_inflate(
 {
     if (inlen < 2 + 4)
     {
-        strncpy(error, "zRIF is too short", error_size);
+        strncpy(error, "zRIF es muy corto", error_size);
         return 0;
     }
 
     if (((in[0] << 8) + in[1]) % 31 != 0)
     {
-        strncpy(error, "zRIF header is corrupted", error_size);
+        strncpy(error, "header zRIF corrupto", error_size);
         return 0;
     }
 
     if ((in[0] & 0xf) != ZLIB_DEFLATE_METHOD)
     {
-        strncpy(error, "only deflate method supported in zRIF", error_size);
+        strncpy(error, "unico metodo de desinflado soportado en zRIF", error_size);
         return 0;
     }
 
@@ -186,7 +186,7 @@ static uint32_t zlib_inflate(
 
         if (get32be(in + 2) != ZLIB_DICTIONARY_ID_ZRIF)
         {
-            strncpy(error, "zRIF uses unknown dictionary", error_size);
+            strncpy(error, "zRIF usa un diccionario desconocido", error_size);
             return 0;
         }
 
@@ -201,14 +201,14 @@ static uint32_t zlib_inflate(
 
     if (puff(dictlen, out, &dlen, in, &slen) != 0)
     {
-        strncpy(error, "failed to uncompress zRIF", error_size);
+        strncpy(error, "Fallo al descomprimir zRIF", error_size);
         return 0;
     }
     memmove(out, out + dictlen, dlen);
 
     if (adler32(out, dlen) != get32be(in + slen))
     {
-        strncpy(error, "zRIF is corrupted, wrong checksum", error_size);
+        strncpy(error, "zRIF corrupto, checksum equivocado", error_size);
         return 0;
     }
 
@@ -225,7 +225,7 @@ int pkgi_zrif_decode(
     len = zlib_inflate(raw, len, out, sizeof(out), error, error_size);
     if (len != 512 && len != 1024)
     {
-        strncpy(error, "wrong size of zRIF, is it corrupted?", error_size);
+        strncpy(error, "Tam. equivocado de zRIF, esta corrupto?", error_size);
         return 0;
     }
 

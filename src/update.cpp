@@ -18,14 +18,14 @@ void start_download()
 {
     try
     {
-        LOGF("starting downloading version {}", version);
+        LOGF("empezando descarga de version {}", version);
 
         const auto filename = fmt::format(
                 "{}/pkgj-v{}.vpk", pkgi_get_config_folder(), version);
         const auto url =
                 fmt::format("{}/pkgj-v{}.vpk", PKGJ_UPDATE_URL, version);
 
-        pkgi_dialog_message("Downloading update", 0);
+        pkgi_dialog_message("Descargando actualizacion", 0);
 
         try
         {
@@ -46,25 +46,25 @@ void start_download()
                 pkgi_write(file, data.data(), read);
             }
 
-            LOGF("update download complete");
+            LOGF("descarga actualizacion completada");
         }
         catch (...)
         {
-            LOGF("download failed, removing partial file");
+            LOGF("descarga fallida, elimina el archivo parcial");
             pkgi_rm(filename.c_str());
             throw;
         }
 
         pkgi_dialog_message(
                 fmt::format(
-                        "The update has been downloaded to {}, install "
-                        "it through VitaShell.",
+                        "Actualizacion descargada en {}, instalala a "
+                        "traves de VitaShell.",
                         filename)
                         .c_str());
     }
     catch (const std::exception& e)
     {
-        pkgi_dialog_error(fmt::format("Download failed: {}", e.what()).c_str());
+        pkgi_dialog_error(fmt::format("Descarga fallida: {}", e.what()).c_str());
     }
 }
 
@@ -74,14 +74,14 @@ void update_thread()
     {
         if (!pkgi_is_module_present("NoNpDrm"))
             pkgi_dialog_error(
-                    "NoNpDrm not found. Games cannot be installed or played.");
+                    "NoNpDrm no instalado. Los juegos no se podran instalar/jugar.");
 
         while (pkgi_dialog_is_open())
         {
             pkgi_sleep(20);
         }
 
-        LOGF("checking latest pkgi version at {}", PKGJ_UPDATE_URL_VERSION);
+        LOGF("comprobando ultima version en {}", PKGJ_UPDATE_URL_VERSION);
 
         VitaHttp http;
         http.start(PKGJ_UPDATE_URL_VERSION, 0);
@@ -90,21 +90,21 @@ void update_thread()
                 http.read(last_versionb.data(), last_versionb.size()));
         std::string last_version(last_versionb.begin(), last_versionb.end());
 
-        LOGF("last version is {}", last_version);
+        LOGF("ultima version es {}", last_version);
 
         if (last_version != PKGI_VERSION)
         {
-            LOG("new version available");
+            LOG("nueva version disponible");
 
             version = last_version;
 
             pkgi_dialog_question(
                     fmt::format(
-                            "New PKGj version {} is available!\nDo you want to "
-                            "download it?",
+                            "Nueva version de PKGj {} disponible!\nQuieres "
+                            "descargarla?",
                             last_version)
                             .c_str(),
-                    {{"Yes",
+                    {{"Si",
                       [] {
                           pkgi_start_thread(
                                   "pkgj_update_download", &start_download);
@@ -114,7 +114,7 @@ void update_thread()
     }
     catch (const std::exception& e)
     {
-        LOGF("error in update thread: {}", e.what());
+        LOGF("error en hilo de actualizacion: {}", e.what());
     }
 }
 }

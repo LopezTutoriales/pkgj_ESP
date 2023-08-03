@@ -23,9 +23,9 @@ CompPackDatabase::CompPackDatabase(std::string const& dbPath) : _dbPath(dbPath)
 
 void CompPackDatabase::reopen()
 {
-    LOG("opening database %s", _dbPath.c_str());
+    LOG("abriendo base de datos %s", _dbPath.c_str());
     sqlite3* db;
-    SQLITE_CHECK(sqlite3_open(_dbPath.c_str(), &db), "can't open database");
+    SQLITE_CHECK(sqlite3_open(_dbPath.c_str(), &db), "imposible abrir base de datos");
     _sqliteDb.reset(db);
 
     try
@@ -41,16 +41,16 @@ void CompPackDatabase::reopen()
                         -1,
                         &stmt,
                         nullptr),
-                "sanity select failed");
+                "sanity select fallo");
         sqlite3_finalize(stmt);
     }
     catch (const std::exception& e)
     {
-        LOG("%s. Trying migration.", e.what());
+        LOG("%s. Intentando migracion.", e.what());
         SQLITE_EXEC(
                 _sqliteDb,
                 R"(DROP TABLE IF EXISTS entries)",
-                "drop table failed");
+                "drop table fallo");
     }
 
     SQLITE_EXEC(
@@ -62,7 +62,7 @@ void CompPackDatabase::reopen()
             path TEXT NOT NULL,
             PRIMARY KEY (titleid, app_version)
         ))",
-            "can't create comp pack table");
+            "Imposible crear tabla pack comp");
 }
 
 namespace
@@ -102,23 +102,23 @@ std::vector<const char*> pkgi_split_row(char** pptr, const char* end)
 
 void CompPackDatabase::parse_entries(std::string& db_data)
 {
-    SQLITE_EXEC(_sqliteDb, "BEGIN", "can't begin transaction");
+    SQLITE_EXEC(_sqliteDb, "BEGIN", "Imposible usar begin");
 
     BOOST_SCOPE_EXIT_ALL(&)
     {
         if (std::uncaught_exceptions() == 0)
-            SQLITE_EXEC(_sqliteDb, "END", "can't end transaction");
+            SQLITE_EXEC(_sqliteDb, "END", "Imposible finalizar");
         else
         {
             char* errmsg;
             auto err = sqlite3_exec(
                     _sqliteDb.get(), "ROLLBACK", nullptr, nullptr, &errmsg);
             if (err != SQLITE_OK)
-                LOG("sqlite error: %s", errmsg);
+                LOG("error sqlite: %s", errmsg);
         }
     };
 
-    SQLITE_EXEC(_sqliteDb, "DELETE FROM entries", "can't truncate table");
+    SQLITE_EXEC(_sqliteDb, "DELETE FROM entries", "imposible truncar tabla");
 
     sqlite3_stmt* stmt;
     SQLITE_CHECK(
@@ -130,7 +130,7 @@ void CompPackDatabase::parse_entries(std::string& db_data)
                     -1,
                     &stmt,
                     nullptr),
-            "can't prepare SQL statement");
+            "imposible preparar estamento SQL");
     BOOST_SCOPE_EXIT_ALL(&)
     {
         sqlite3_finalize(stmt);
@@ -150,13 +150,13 @@ void CompPackDatabase::parse_entries(std::string& db_data)
             current_line = ptr;
             const auto fields = pkgi_split_row(&ptr, end);
             if (fields.size() < 1)
-                throw std::runtime_error("failed to split line");
+                throw std::runtime_error("imposible dividir linea");
 
             const auto path = std::string(fields[0]);
 
             std::smatch matches;
             if (!std::regex_search(path, matches, regex))
-                throw formatEx<std::runtime_error>("regex didn't match");
+                throw formatEx<std::runtime_error>("regex no coincide");
             const auto titleid = matches.str(1);
             const auto app_version = matches.str(3);
 
@@ -169,13 +169,13 @@ void CompPackDatabase::parse_entries(std::string& db_data)
             auto err = sqlite3_step(stmt);
             if (err != SQLITE_DONE)
                 throw std::runtime_error(fmt::format(
-                        "can't execute SQL statement:\n{}",
+                        "imposible ejecutar estamento SQL:\n{}",
                         sqlite3_errmsg(_sqliteDb.get())));
         }
         catch (const std::exception& e)
         {
             throw formatEx<std::runtime_error>(
-                    "failed to parse line\n{}\n{}", current_line, e.what());
+                    "fallo al parsear linea\n{}\n{}", current_line, e.what());
         }
     }
 }
@@ -187,9 +187,9 @@ void CompPackDatabase::update(Http* http, const std::string& update_url)
     uint64_t db_size = 0;
 
     if (update_url.empty())
-        throw std::runtime_error("no comp pack url");
+        throw std::runtime_error("no hay url de pack comp");
 
-    LOGF("loading comp pack list from {}", update_url);
+    LOGF("cargando lista pack comp desde {}", update_url);
 
     http->start(update_url, 0);
 
@@ -197,7 +197,7 @@ void CompPackDatabase::update(Http* http, const std::string& update_url)
 
     if (length > (int64_t)db_data.size())
         throw std::runtime_error(
-                "comp pack list is too large... check for newer pkgj version");
+                "lista pack comp muy grande... mira una nueva version de pkgj");
 
     for (;;)
     {
@@ -211,14 +211,14 @@ void CompPackDatabase::update(Http* http, const std::string& update_url)
 
     if (db_size == 0)
         throw std::runtime_error(
-                "comp pack list is empty... check for newer pkgj version");
+                "lista pack comp vacia... mira una nueva version de pkgj");
 
-    LOG("parsing items");
+    LOG("parseando objetos");
 
     db_data.resize(db_size);
     parse_entries(db_data);
 
-    LOG("finished parsing");
+    LOG("parseo finalizado");
 }
 
 std::optional<CompPackDatabase::Item> CompPackDatabase::get(
@@ -228,7 +228,7 @@ std::optional<CompPackDatabase::Item> CompPackDatabase::get(
     // after the app is suspended, all further query will return disk I/O error
     reopen();
 
-    LOG("reloading database");
+    LOG("recargando base de datos");
 
     sqlite3_stmt* stmt;
     SQLITE_CHECK(
@@ -240,7 +240,7 @@ std::optional<CompPackDatabase::Item> CompPackDatabase::get(
                     -1,
                     &stmt,
                     nullptr),
-            "can't prepare SQL statement");
+            "imposible preparar estamento SQL");
     BOOST_SCOPE_EXIT_ALL(&)
     {
         sqlite3_finalize(stmt);
@@ -253,7 +253,7 @@ std::optional<CompPackDatabase::Item> CompPackDatabase::get(
         return std::nullopt;
     if (err != SQLITE_ROW)
         throw std::runtime_error(fmt::format(
-                "can't execute SQL statement:\n{}",
+                "imposible ejecutar estamento SQL:\n{}",
                 sqlite3_errmsg(_sqliteDb.get())));
 
     std::string app_version =

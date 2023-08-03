@@ -43,7 +43,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("create mutex failed error=0x%08x", res);
+            LOG("fallo create mutex, error=0x%08x", res);
         }
     }
 
@@ -53,7 +53,7 @@ public:
         if (res < 0)
         {
             // TODO assert
-            LOG("delete mutex failed error=0x%08x", res);
+            LOG("fallo delete mutex, error=0x%08x", res);
         }
     }
 
@@ -63,7 +63,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("lock failed error=0x%08x", res);
+            LOG("fallo lock, error=0x%08x", res);
         }
     }
 
@@ -76,7 +76,7 @@ public:
         //    // TODO throw
         //    LOG("lock failed error=0x%08x", res);
         //}
-        throw std::runtime_error("try_lock not implemented");
+        throw std::runtime_error("try_lock no implementado");
     }
 
     void unlock()
@@ -85,7 +85,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("unlock failed error=0x%08x", res);
+            LOG("fallo unlock, error=0x%08x", res);
         }
     }
 
@@ -110,7 +110,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("create cond failed error=0x%08x", res);
+            LOG("fallo create cond, error=0x%08x", res);
         }
     }
 
@@ -120,7 +120,7 @@ public:
         if (res < 0)
         {
             // TODO assert
-            LOG("delete cond failed error=0x%08x", res);
+            LOG("fallo delete cond, error=0x%08x", res);
         }
     }
 
@@ -130,7 +130,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("cond signal failed error=0x%08x", res);
+            LOG("fallo cond signal, error=0x%08x", res);
         }
     }
 
@@ -140,7 +140,7 @@ public:
         if (res < 0)
         {
             // TODO throw
-            LOG("wait cond failed error=0x%08x", res);
+            LOG("fallo wait cond, error=0x%08x", res);
         }
     }
 
@@ -171,7 +171,7 @@ public:
         if (_tid < 0)
         {
             // TODO throw
-            LOG("create thread failed error=0x%08x", _tid);
+            LOG("fallo create thread, error=0x%08x", _tid);
         }
         auto entryp = new EntryPoint(std::move(entry));
         const auto res = sceKernelStartThread(_tid, sizeof(entryp), &entryp);
@@ -179,7 +179,7 @@ public:
         {
             delete entryp;
             // TODO throw
-            LOG("start thread failed error=0x%08x", res);
+            LOG("fallo start thread, error=0x%08x", res);
         }
     }
 
@@ -189,7 +189,7 @@ public:
         if (res < 0)
         {
             // TODO assert
-            LOG("thread delete failed error=0x%08x", res);
+            LOG("fallo thread delete, error=0x%08x", res);
         }
     }
 
@@ -200,7 +200,7 @@ public:
         if (res < 0)
         {
             // TODO assert
-            LOG("thread join failed error=0x%08x", res);
+            LOG("fallo thread join, error=0x%08x", res);
         }
     }
 
@@ -214,15 +214,15 @@ private:
             auto entryp = std::unique_ptr<EntryPoint>(
                     *static_cast<EntryPoint**>(argp));
             (*entryp)();
-            LOG("thread successfully terminated");
+            LOG("thread terminado con exito");
         }
         catch (const std::exception& e)
         {
-            LOG("got exception from thread: %s", e.what());
+            LOG("excepcion obtenida del hilo: %s", e.what());
         }
         catch (...)
         {
-            LOG("got unknown exception from thread");
+            LOG("excepcion desconocida del hilo");
         }
         return 0;
     }

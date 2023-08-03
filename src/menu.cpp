@@ -37,33 +37,33 @@ typedef struct
 } MenuEntry;
 
 static const MenuEntry menu_entries[] = {
-        {MenuSearch, "Search...", 0},
-        {MenuSearchClear, PKGI_UTF8_CLEAR " clear", 0},
+        {MenuSearch, "Buscar...", 0},
+        {MenuSearchClear, PKGI_UTF8_CLEAR " borrar", 0},
 
-        {MenuText, "Sort by:", 0},
-        {MenuSort, "Title", SortByTitle},
+        {MenuText, "Ordenar por:", 0},
+        {MenuSort, "Titulo", SortByTitle},
         {MenuSort, "Region", SortByRegion},
-        {MenuSort, "Name", SortByName},
-        {MenuSort, "Size", SortBySize},
-        {MenuSort, "Date", SortByDate},
+        {MenuSort, "Nombre", SortByName},
+        {MenuSort, "Tamaño", SortBySize},
+        {MenuSort, "Fecha", SortByDate},
 
-        {MenuText, "Filters:", 0},
+        {MenuText, "Filtros:", 0},
         {MenuFilter, "Asia", DbFilterRegionASA},
-        {MenuFilter, "Europe", DbFilterRegionEUR},
-        {MenuFilter, "Japan", DbFilterRegionJPN},
+        {MenuFilter, "Europa", DbFilterRegionEUR},
+        {MenuFilter, "Japon", DbFilterRegionJPN},
         {MenuFilter, "USA", DbFilterRegionUSA},
-        {MenuFilter, "Installed games only", DbFilterInstalled},
+        {MenuFilter, "Juegos instalados", DbFilterInstalled},
 
-        {MenuRefresh, "Refresh", 0},
+        {MenuRefresh, "Refrescar", 0},
 
-        {MenuShow, "Show games", 1},
-        {MenuShow, "Show DLCs", 2},
-        {MenuShow, "Show demos", 64},
-        {MenuShow, "Show themes", 32},
-        {MenuShow, "Show PS1 games", 4},
-        {MenuShow, "Show PSP games", 8},
-        {MenuShow, "Show PSP DLCs", 128},
-        {MenuShow, "Show PSM games", 16},
+        {MenuShow, "PS Vita - Juegos", 1},
+        {MenuShow, "PS Vita - DLCs", 2},
+        {MenuShow, "PS Vita - Demos", 64},
+        {MenuShow, "PS Vita - Temas", 32},
+        {MenuShow, "PS1 - Juegos", 4},
+        {MenuShow, "PSP - Juegos", 8},
+        {MenuShow, "PSP - DLCs", 128},
+        {MenuShow, "PSM - Juegos", 16},
 };
 
 int pkgi_menu_is_open(void)

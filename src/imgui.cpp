@@ -202,20 +202,20 @@ void pkgi_imgui_render(ImDrawData* draw_data)
         const auto vertices = vita2d_pool_memalign(
                 vtx_size * ImguiVertexSize, ImguiVertexSize);
         if (vertices == nullptr)
-            throw std::runtime_error("video memory too low");
+            throw std::runtime_error("memoria de video muy baja");
         memcpy(vertices, vtx_buffer, vtx_size * ImguiVertexSize);
 
         static_assert(sizeof(ImDrawIdx) == 2);
         auto indices = (uint16_t*)vita2d_pool_memalign(
                 idx_size * sizeof(ImDrawIdx), sizeof(void*));
         if (vertices == nullptr)
-            throw std::runtime_error("video memory too low");
+            throw std::runtime_error("memoria de video muy baja");
         memcpy(indices, idx_buffer, idx_size * sizeof(ImDrawIdx));
 
         auto err = sceGxmSetVertexStream(_vita2d_context, 0, vertices);
         if (err != 0)
             throw formatEx<std::runtime_error>(
-                    "sceGxmSetVertexStream failed: {:#08x}",
+                    "sceGxmSetVertexStream fallo: {:#08x}",
                     static_cast<uint32_t>(err));
 
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
@@ -232,7 +232,7 @@ void pkgi_imgui_render(ImDrawData* draw_data)
                         _vita2d_context, 0, &texture->gxm_tex);
                 if (err != 0)
                     throw formatEx<std::runtime_error>(
-                            "sceGxmSetFragmentTexture failed: {:#08x}",
+                            "sceGxmSetFragmentTexture fallo: {:#08x}",
                             static_cast<uint32_t>(err));
 
                 err = sceGxmDraw(
@@ -243,7 +243,7 @@ void pkgi_imgui_render(ImDrawData* draw_data)
                         pcmd->ElemCount);
                 if (err != 0)
                     throw formatEx<std::runtime_error>(
-                            "sceGxmDraw failed: {:#08x}",
+                            "sceGxmDraw fallo: {:#08x}",
                             static_cast<uint32_t>(err));
             }
             indices += pcmd->ElemCount;

@@ -12,7 +12,7 @@
 	<frame id="frame2">
 		<liveitem>
 			<text valign="bottom" align="left" text-align="left" text-valign="bottom" line-space="3" ellipsis="on">
-				<str color="#ffffff" size="45" bold="on" shadow="on">PKGj v@VITA_VERSION@</str>
+				<str color="#ffffff" size="45" bold="on" shadow="on">PKGj v@VITA_VERSION@ ESP</str>
 			</text>
 		</liveitem>
 	</frame>
@@ -20,8 +20,17 @@
 	<frame id="frame3">
 		<liveitem>
 			<text valign="top" align="left" text-align="left" text-valign="top" line-space="2" ellipsis="on">
-				<str size="22" shadow="on">by blastrock&#xD;&#xA;and cuevavirus</str>
+				<str size="22" shadow="on">por Blastrock&#xD;&#xA;y Cuevavirus</str>
 			</text>
 		</liveitem>
 	</frame>
+	
+	<frame id="frame4">
+		<liveitem>
+			<text valign="top" align="right" text-align="left" text-valign="top" line-space="2" ellipsis="on">
+				<str size="22" shadow="on">Traducido por Lopez Tutoriales</str>
+			</text>
+		</liveitem>
+	</frame>
+	
 </livearea>

@@ -178,7 +178,7 @@ Config pkgi_load_config()
 
         auto const path =
                 fmt::format("{}/config.txt", pkgi_get_config_folder());
-        LOGF("config location: {}", path);
+        LOGF("localizacion de config: {}", path);
 
         if (!pkgi_file_exists(path))
             return config;
@@ -186,7 +186,7 @@ Config pkgi_load_config()
         auto data = pkgi_load(path);
         data.push_back('\n');
 
-        LOG("config.txt loaded, parsing");
+        LOG("config.txt cargado, parseando");
         auto text = reinterpret_cast<char*>(data.data());
         const auto end = text + data.size();
 
@@ -251,7 +251,7 @@ Config pkgi_load_config()
     catch (const std::exception& e)
     {
         throw formatEx<std::runtime_error>(
-                "Failed to load config:\n{}", e.what());
+                "Fallo al cargar config:\n{}", e.what());
     }
 }
 

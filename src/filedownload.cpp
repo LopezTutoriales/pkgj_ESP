@@ -26,21 +26,21 @@ void FileDownload::update_progress()
 
 void FileDownload::start_download()
 {
-    LOGF("requesting {}", download_url);
+    LOGF("solicitando {}", download_url);
     _http->start(download_url, 0);
 
     const auto http_length = _http->get_length();
     if (http_length < 0)
-        throw DownloadError("HTTP response has unknown length");
+        throw DownloadError("Longitud de respuesta HHTP desconocida");
 
     download_size = http_length;
-    LOGF("http response length = {}", download_size);
+    LOGF("longitud de respuesta http = {}", download_size);
 }
 
 void FileDownload::download_data(uint32_t size)
 {
     if (is_canceled())
-        throw std::runtime_error("download was canceled");
+        throw std::runtime_error("descarga cancelada");
 
     if (size == 0)
         return;
@@ -54,7 +54,7 @@ void FileDownload::download_data(uint32_t size)
         {
             const int read = _http->read(buffer.data() + pos, size - pos);
             if (read == 0)
-                throw DownloadError("HTTP connection closed");
+                throw DownloadError("conexion HTTP cerrada");
             pos += read;
         }
     }
@@ -66,12 +66,12 @@ void FileDownload::download_data(uint32_t size)
 
 void FileDownload::download_file()
 {
-    LOG("downloading encrypted files");
+    LOG("descargando arch. encriptados");
 
-    LOGF("creating {} file", root);
+    LOGF("creando archivo {}", root);
     item_file = pkgi_create(root.c_str());
     if (!item_file)
-        throw formatEx<DownloadError>("cannot create file {}", root);
+        throw formatEx<DownloadError>("imposible crear archivo {}", root);
 
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -96,7 +96,7 @@ void FileDownload::download(
         const std::string& url)
 {
     root = fmt::format("{}pkgj/{}-comp.ppk", partition, titleid);
-    LOGF("temp installation folder: {}", root);
+    LOGF("carp. instalacion temporal: {}", root);
 
     download_size = 0;
     download_offset = 0;

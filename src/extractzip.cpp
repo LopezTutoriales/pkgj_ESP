@@ -19,7 +19,7 @@ void pkgi_extract_zip(const std::string& zip_file, const std::string& dest)
     const auto zip_fd = zip_open(zip_file.c_str(), ZIP_RDONLY, &err);
     if (!zip_fd)
         throw formatEx<std::runtime_error>(
-                "failed to open zip {}:\n{}", zip_file, err);
+                "fallo al abrir zip {}:\n{}", zip_file, err);
     BOOST_SCOPE_EXIT_ALL(&)
     {
         zip_close(zip_fd);
@@ -31,29 +31,29 @@ void pkgi_extract_zip(const std::string& zip_file, const std::string& dest)
         struct zip_stat stat;
         if (zip_stat_index(zip_fd, i, 0, &stat) != 0)
             throw formatEx<std::runtime_error>(
-                    "can't zip_stat index {} of {}:\n{}",
+                    "imposible zip_stat index {} de {}:\n{}",
                     i,
                     zip_file,
                     zip_strerror(zip_fd));
 
         if (!(stat.valid & ZIP_STAT_NAME))
-            throw std::runtime_error("unsupported zip: no file name");
+            throw std::runtime_error("zip no soportado: sin nombre");
         if (!(stat.valid & ZIP_STAT_SIZE))
-            throw std::runtime_error("unsupported zip: no file size");
+            throw std::runtime_error("zip no soportado: sin tamaño");
 
         std::string path = stat.name;
         if (path[path.size() - 1] == '/')
         {
-            LOGF("creating directory {}", path);
+            LOGF("creando directorio {}", path);
             pkgi_mkdirs((dest + '/' + path).c_str());
         }
         else
         {
-            LOGF("uncompressing file {}", path);
+            LOGF("descomprimiendo archivo {}", path);
             const auto comp_fd = zip_fopen_index(zip_fd, i, 0);
             if (!comp_fd)
                 throw formatEx<std::runtime_error>(
-                        "can't zip_fopen index {} of {}:\n{}",
+                        "imposible zip_fopen index {} de {}:\n{}",
                         i,
                         zip_file,
                         zip_strerror(zip_fd));
@@ -64,7 +64,7 @@ void pkgi_extract_zip(const std::string& zip_file, const std::string& dest)
 
             const auto out_fd = pkgi_create((dest + '/' + path).c_str());
             if (!out_fd)
-                throw formatEx<std::runtime_error>("can't open file {}", path);
+                throw formatEx<std::runtime_error>("imposible abrir archivo {}", path);
             BOOST_SCOPE_EXIT_ALL(&)
             {
                 pkgi_close(out_fd);

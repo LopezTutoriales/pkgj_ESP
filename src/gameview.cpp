@@ -53,34 +53,34 @@ void GameView::render()
     ImGui::PushTextWrapPos(
             _image_fetcher.get_texture() == nullptr ? 0.f
                                                     : GameViewWidth - 300.f);
-    ImGui::Text(fmt::format("Firmware version: {}", pkgi_get_system_version())
+    ImGui::Text(fmt::format("Version de firmware: {}", pkgi_get_system_version())
                         .c_str());
     ImGui::Text(
             fmt::format(
-                    "Required firmware version: {}", get_min_system_version())
+                    "Version de firmware requerida: {}", get_min_system_version())
                     .c_str());
 
     ImGui::Text(" ");
 
     ImGui::Text(fmt::format(
-                        "Installed game version: {}",
-                        _game_version.empty() ? "not installed" : _game_version)
+                        "Version del juego instalado: {}",
+                        _game_version.empty() ? "no instalado" : _game_version)
                         .c_str());
     if (_comppack_versions.present && _comppack_versions.base.empty() &&
         _comppack_versions.patch.empty())
     {
-        ImGui::Text("Installed compatibility pack: unknown version");
+        ImGui::Text("Pack de compatibilidad instalado: desconocido");
     }
     else
     {
         ImGui::Text(fmt::format(
-                            "Installed base compatibility pack: {}",
-                            _comppack_versions.base.empty() ? "no" : "yes")
+                            "Pack de compatibilidad base instalado: {}",
+                            _comppack_versions.base.empty() ? "no" : "si")
                             .c_str());
         ImGui::Text(fmt::format(
-                            "Installed patch compatibility pack version: {}",
+                            "Version pack de compatibilidad de parches instalado: {}",
                             _comppack_versions.patch.empty()
-                                    ? "none"
+                                    ? "ninguno"
                                     : _comppack_versions.patch)
                             .c_str());
     }
@@ -95,12 +95,12 @@ void GameView::render()
 
     if (_patch_info_fetcher.get_status() == PatchInfoFetcher::Status::Found)
     {
-        if (ImGui::Button("Install game and patch###installgame"))
+        if (ImGui::Button("Instalar juego y parche###installgame"))
             start_download_package();
     }
     else
     {
-        if (ImGui::Button("Install game###installgame"))
+        if (ImGui::Button("Instalar juego###installgame"))
             start_download_package();
     }
     ImGui::SetItemDefaultFocus();
@@ -109,14 +109,14 @@ void GameView::render()
     {
         if (!_downloader->is_in_queue(CompPackBase, _item->titleid))
         {
-            if (ImGui::Button("Install base compatibility "
-                              "pack###installbasecomppack"))
+            if (ImGui::Button("Instalar pack de compatibilidad "
+                              "base###installbasecomppack"))
                 start_download_comppack(false);
         }
         else
         {
-            if (ImGui::Button("Cancel base compatibility pack "
-                              "installation###installbasecomppack"))
+            if (ImGui::Button("Cancelar instalacion de pack de "
+                              "compatibilidad base###installbasecomppack"))
                 cancel_download_comppacks(false);
         }
     }
@@ -125,7 +125,7 @@ void GameView::render()
         if (!_downloader->is_in_queue(CompPackPatch, _item->titleid))
         {
             if (ImGui::Button(fmt::format(
-                                      "Install compatibility pack "
+                                      "Instalar pack de compatibilidad "
                                       "{}###installpatchcommppack",
                                       _patch_comppack->app_version)
                                       .c_str()))
@@ -133,8 +133,8 @@ void GameView::render()
         }
         else
         {
-            if (ImGui::Button("Cancel patch compatibility pack "
-                              "installation###installpatchcommppack"))
+            if (ImGui::Button("Cancelar instalacion de pack de parches "
+                              "de compatibilidad###installpatchcommppack"))
                 cancel_download_comppacks(true);
         }
     }
@@ -170,25 +170,25 @@ void GameView::printDiagnostic()
     auto const systemVersion = pkgi_get_system_version();
     auto const minSystemVersion = get_min_system_version();
 
-    ImGui::Text("Diagnostic:");
+    ImGui::Text("Diagnostico:");
 
     if (systemVersion < minSystemVersion)
     {
         if (!_comppack_versions.present)
         {
             if (_refood_present)
-                ImGui::Text("- This game will work thanks to reF00D");
+                ImGui::Text("- Este juego funcionara gracias a reF00D");
             else if (_0syscall6_present)
-                ImGui::Text("- This game will work thanks to 0syscall6");
+                ImGui::Text("- Este juego funcionara gracias a 0syscall6");
             else
                 printError(
-                        "- Your firmware is too old to play this game, you "
-                        "must install reF00D or 0syscall6");
+                        "- Tu firmware es muy bajo para jugar este juego, "
+                        "debes instalar reF00D u 0syscall6");
         }
     }
     else
     {
-        ImGui::Text("- Your firmware is recent enough");
+        ImGui::Text("- Tu firmware es el mas reciente");
     }
 
     if (_comppack_versions.present && _comppack_versions.base.empty() &&
@@ -196,17 +196,17 @@ void GameView::printDiagnostic()
     {
         ImGui::TextColored(
                 Yellow,
-                "- A compatibility pack is installed but not by PKGj, please "
-                "make sure it matches the installed version or reinstall it "
-                "with PKGj");
+                "- Un pack de compatibilidad esta instalado pero no por "
+                "PKGj, por favor, asegurese de que coincide con la version "
+                "instalada o reinstalalo con PKGj.");
         ok = false;
     }
 
     if (_comppack_versions.base.empty() && !_comppack_versions.patch.empty())
         printError(
-                "- You have installed an update compatibility pack without "
-                "installing the base pack, install the base pack first and "
-                "reinstall the update compatibility pack.");
+                "- Has instalado un pack de compatibilidad actualizado sin "
+                "instalar el pack base, instala el pack base primero y "
+                "reinstala la actualizacion del pack de compatibilidad.");
 
     std::string comppack_version;
     if (!_comppack_versions.patch.empty())
@@ -217,25 +217,25 @@ void GameView::printDiagnostic()
     if (_item->presence == PresenceInstalled && !comppack_version.empty() &&
         comppack_version < _game_version)
         printError(
-                "- The version of the game does not match the installed "
-                "compatibility pack. If you have updated the game, also "
-                "install the update compatibility pack.");
+                "- La version del juego no coincide con el pack de "
+                "compatibilidad instalado. Si has actualizado el juego, "
+                "instala tambien el pack de compatibilidad actualizado.");
 
     if (_item->presence == PresenceInstalled &&
         comppack_version > _game_version)
         printError(
-                "- The version of the game does not match the installed "
-                "compatibility pack. Downgrade to the base compatibility "
-                "pack or update the game through the Live Area.");
+                "- La version del juego no coincide con el pack de "
+                "compatibilidad instalado. Downgradea a el pack base de "
+                "compatibilidad o actualiza el juego desde el Live Area.");
 
     if (_item->presence != PresenceInstalled)
     {
-        ImGui::Text("- Game not installed");
+        ImGui::Text("- Juego no instalado");
         ok = false;
     }
 
     if (ok)
-        ImGui::TextColored(Green, "All green");
+        ImGui::TextColored(Green, "Todo verde");
 }
 
 std::string GameView::get_min_system_version()
@@ -249,7 +249,7 @@ std::string GameView::get_min_system_version()
 
 void GameView::refresh()
 {
-    LOGF("refreshing gameview");
+    LOGF("refrescando gameview");
     _refood_present = pkgi_is_module_present("ref00d");
     _0syscall6_present = pkgi_is_module_present("0syscall6");
     _game_version = pkgi_get_game_version(_item->titleid);
@@ -266,15 +266,15 @@ void GameView::start_download_package()
 {
     if (_item->presence == PresenceInstalled)
     {
-        LOGF("[{}] {} - already installed", _item->titleid, _item->name);
+        LOGF("[{}] {} - ya instalado", _item->titleid, _item->name);
         pkgi_dialog_question(
         fmt::format(
-                "{} is already installed."
-                "Would you like to redownload it?",
+                "{} ya esta instalado. "
+                "Quieres volver a descargarlo?",
                 _item->name)
                 .c_str(),
-        {{"Redownload.", [this] { this->do_download(); }},
-         {"Dont Redownload.", [] {} }});
+        {{"Volver a descargar.", [this] { this->do_download(); }},
+         {"No volver a descargar.", [] {} }});
         return;
     }
     this->do_download();

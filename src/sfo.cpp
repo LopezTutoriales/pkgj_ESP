@@ -29,17 +29,17 @@ std::string pkgi_sfo_get_string(
         const uint8_t* buffer, size_t size, const std::string& name)
 {
     if (size < sizeof(SfoHeader))
-        throw std::runtime_error("truncated param.sfo");
+        throw std::runtime_error("param.sfo truncado");
 
     const SfoHeader* header = reinterpret_cast<const SfoHeader*>(buffer);
     const SfoEntry* entries =
             reinterpret_cast<const SfoEntry*>(buffer + sizeof(SfoHeader));
 
     if (header->magic != SFO_MAGIC)
-        throw std::runtime_error("can't parse SFO, invalid magic");
+        throw std::runtime_error("Imposible parsear SFO, magia invalida");
 
     if (size < sizeof(SfoHeader) + header->count * sizeof(SfoEntry))
-        throw std::runtime_error("truncated param.sfo");
+        throw std::runtime_error("param.sfo truncado");
 
     for (uint32_t i = 0; i < header->count; i++)
         if (std::string(reinterpret_cast<const char*>(

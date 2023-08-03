@@ -108,10 +108,10 @@ Type mode_to_type(Mode mode)
     case ModeDemos:
     case ModeThemes:
         throw formatEx<std::runtime_error>(
-                "unsupported mode {}", static_cast<int>(mode));
+                "modo no soportado {}", static_cast<int>(mode));
     }
     throw formatEx<std::runtime_error>(
-            "unknown mode {}", static_cast<int>(mode));
+            "modo desconocido {}", static_cast<int>(mode));
 }
 
 BgdlType mode_to_bgdl_type(Mode mode)
@@ -133,7 +133,7 @@ BgdlType mode_to_bgdl_type(Mode mode)
         return BgdlTypeTheme;
     default:
         throw formatEx<std::runtime_error>(
-                "unsupported bgdl mode {}", static_cast<int>(mode));
+                "modo bgdl no soportado {}", static_cast<int>(mode));
     }
 }
 
@@ -156,7 +156,7 @@ void configure_db(TitleDatabase* db, const char* search, const Config* config)
         snprintf(
                 error_state,
                 sizeof(error_state),
-                "can't reload list: %s",
+                "imposible recargar lista: %s",
                 e.what());
         pkgi_dialog_error(error_state);
     }
@@ -184,12 +184,12 @@ std::string const& pkgi_get_url_from_mode(Mode mode)
         return config.psx_games_url;
     }
     throw std::runtime_error(
-            fmt::format("unknown mode: {}", static_cast<int>(mode)));
+            fmt::format("modo desconocido: {}", static_cast<int>(mode)));
 }
 
 void pkgi_refresh_thread(void)
 {
-    LOG("starting update");
+    LOG("empezando actualizacion");
     try
     {
         auto mode_count = ModeCount + (config.comppack_url.empty() ? 0 : 2);
@@ -204,7 +204,7 @@ void pkgi_refresh_thread(void)
             {
                 std::lock_guard<Mutex> lock(refresh_mutex);
                 current_action = fmt::format(
-                        "Refreshing {} [{}/{}]",
+                        "Refrescando {} [{}/{}]",
                         pkgi_mode_to_string(mode),
                         i + 1,
                         mode_count);
@@ -217,7 +217,7 @@ void pkgi_refresh_thread(void)
             {
                 std::lock_guard<Mutex> lock(refresh_mutex);
                 current_action = fmt::format(
-                        "Refreshing games compatibility packs [{}/{}]",
+                        "Refrescando packs de compatibilidad [{}/{}]",
                         mode_count - 1,
                         mode_count);
             }
@@ -229,7 +229,7 @@ void pkgi_refresh_thread(void)
             {
                 std::lock_guard<Mutex> lock(refresh_mutex);
                 current_action = fmt::format(
-                        "Refreshing updates compatibility packs [{}/{}]",
+                        "Refrescando actual. de packs de compatibilidad [{}/{}]",
                         mode_count,
                         mode_count);
             }
@@ -248,7 +248,7 @@ void pkgi_refresh_thread(void)
         snprintf(
                 error_state,
                 sizeof(error_state),
-                "can't get list: %s",
+                "imposible obtener lista: %s",
                 e.what());
         pkgi_dialog_error(error_state);
     }
@@ -301,15 +301,15 @@ void pkgi_install_package(Downloader& downloader, DbItem* item)
 {
     if (item->presence == PresenceInstalled)
     {
-        LOGF("[{}] {} - already installed", item->content, item->name);
+        LOGF("[{}] {} - ya instalado", item->content, item->name);
         pkgi_dialog_question(
         fmt::format(
-                "{} is already installed."
-                "Would you like to redownload it?", 
+                "{} ya esta instalado. "
+                "Quieres volver a descargarlo?", 
                 item->name)
                 .c_str(),
-        {{"Redownload.", [&downloader, item] { do_download(downloader, item); }},
-         {"Dont Redownload.", [] {} }});
+        {{"Descargar de nuevo.", [&downloader, item] { do_download(downloader, item); }},
+         {"No descargar de nuevo.", [] {} }});
         return;
     }
     
@@ -624,7 +624,7 @@ void pkgi_do_main(Downloader& downloader, pkgi_input* input)
 
     if (db_count == 0)
     {
-        const char* text = "No items! Try to refresh.";
+        const char* text = "Sin objetos! Intenta refrescar.";
 
         int w = pkgi_text_width(text);
         pkgi_draw_text(
@@ -729,7 +729,7 @@ void pkgi_do_head(void)
     const char* version = PKGI_VERSION;
 
     char title[256];
-    pkgi_snprintf(title, sizeof(title), "PKGj v%s", version);
+    pkgi_snprintf(title, sizeof(title), "PKGj v%s ESP por Lopez Tutoriales", version);
     pkgi_draw_text(0, 0, PKGI_COLOR_TEXT_HEAD, title);
 
     pkgi_draw_rect(
@@ -746,7 +746,7 @@ void pkgi_do_head(void)
         pkgi_snprintf(
                 battery,
                 sizeof(battery),
-                "Battery: %u%%",
+                "Bateria: %u%%",
                 pkgi_bettery_get_level());
 
         uint32_t color;
@@ -858,14 +858,14 @@ void pkgi_do_tail(Downloader& downloader)
         pkgi_snprintf(
                 text,
                 sizeof(text),
-                "Downloading %s: %s (%s, %d%%)",
+                "Descargando %s: %s (%s, %d%%)",
                 type_to_string(current_download->type).c_str(),
                 current_download->name.c_str(),
                 sspeed.c_str(),
                 static_cast<int>(download_offset * 100 / download_size));
     }
     else
-        pkgi_snprintf(text, sizeof(text), "Idle");
+        pkgi_snprintf(text, sizeof(text), "Inactivo");
 
     pkgi_draw_text(0, bottom_y, PKGI_COLOR_TEXT_TAIL, text);
 
@@ -876,11 +876,11 @@ void pkgi_do_tail(Downloader& downloader)
 
     if (count == total)
     {
-        pkgi_snprintf(text, sizeof(text), "Count: %u", count);
+        pkgi_snprintf(text, sizeof(text), "Recuento: %u", count);
     }
     else
     {
-        pkgi_snprintf(text, sizeof(text), "Count: %u (%u)", count, total);
+        pkgi_snprintf(text, sizeof(text), "Recuento: %u (%u)", count, total);
     }
     pkgi_draw_text(0, second_line, PKGI_COLOR_TEXT_TAIL, text);
 
@@ -900,7 +900,7 @@ void pkgi_do_tail(Downloader& downloader)
     }
 
     char free[64];
-    pkgi_snprintf(free, sizeof(free), "Free: %s", size);
+    pkgi_snprintf(free, sizeof(free), "Espacio libre: %s", size);
 
     int rightw = pkgi_text_width(free);
     pkgi_draw_text(
@@ -916,26 +916,26 @@ void pkgi_do_tail(Downloader& downloader)
     if (gameview || pkgi_dialog_is_open())
     {
         bottom_text = fmt::format(
-                "{} select {} close", pkgi_get_ok_str(), pkgi_get_cancel_str());
+                "{} seleccionar {} cerrar", pkgi_get_ok_str(), pkgi_get_cancel_str());
     }
     else if (pkgi_menu_is_open())
     {
         bottom_text = fmt::format(
-                "{} select  " PKGI_UTF8_T " close  {} cancel",
+                "{} seleccionar  " PKGI_UTF8_T " cerrar  {} cancelar",
                 pkgi_get_ok_str(),
                 pkgi_get_cancel_str());
     }
     else
     {
         if (mode == ModeGames)
-            bottom_text += fmt::format("{} details ", pkgi_get_ok_str());
+            bottom_text += fmt::format("{} detalles ", pkgi_get_ok_str());
         else
         {
             DbItem* item = db->get(selected_item);
             if (item && item->presence == PresenceInstalling)
-                bottom_text += fmt::format("{} cancel ", pkgi_get_ok_str());
+                bottom_text += fmt::format("{} cancelar ", pkgi_get_ok_str());
             else if (item && item->presence != PresenceInstalled)
-                bottom_text += fmt::format("{} install ", pkgi_get_ok_str());
+                bottom_text += fmt::format("{} instalar ", pkgi_get_ok_str());
         }
         bottom_text += PKGI_UTF8_T " menu";
     }
@@ -994,10 +994,10 @@ void pkgi_reload()
     }
     catch (const std::exception& e)
     {
-        LOGF("error during reload: {}", e.what());
+        LOGF("error durante la recarga: {}", e.what());
         pkgi_dialog_error(
                 fmt::format(
-                        "failed to reload db: {}, try to refresh?", e.what())
+                        "fallo al recargar la bd: {}, trata de refrescar?", e.what())
                         .c_str());
     }
 }
@@ -1047,7 +1047,7 @@ void pkgi_download_psm_runtime_if_needed() {
         
         pkgi_start_bgdl(
             BgdlTypeGame,
-            "PlayStation Mobile Runtime Package",
+            "Paquete PlayStation Mobile Runtime",
             "http://ares.dl.playstation.net/psm-runtime/IP9100-PCSI00011_00-PSMRUNTIME000000.pkg",
             std::vector<uint8_t>(rif, rif + PKGI_PSM_RIF_SIZE));
             
@@ -1058,7 +1058,7 @@ void pkgi_download_psm_runtime_if_needed() {
 
 void pkgi_start_download(Downloader& downloader, const DbItem& item)
 {
-    LOGF("[{}] {} - starting to install", item.content, item.name);
+    LOGF("[{}] {} - empezando a instalar", item.content, item.name);
 
     try
     {
@@ -1089,7 +1089,7 @@ void pkgi_start_download(Downloader& downloader, const DbItem& item)
                         std::vector<uint8_t>(rif, rif + PKGI_PSM_RIF_SIZE));
                 pkgi_dialog_message(
                         fmt::format(
-                                "Installation of {} queued in LiveArea",
+                                "Instalacion de {} en cola en LiveArea",
                                 item.name)
                                 .c_str());
             }
@@ -1120,7 +1120,7 @@ void pkgi_start_download(Downloader& downloader, const DbItem& item)
     catch (const std::exception& e)
     {
         pkgi_dialog_error(
-                fmt::format("Failed to install {}: {}", item.name, e.what())
+                fmt::format("Error al instalar {}: {}", item.name, e.what())
                         .c_str());
     }
 }
@@ -1133,8 +1133,8 @@ int main()
     {
         if (!pkgi_is_unsafe_mode())
             throw std::runtime_error(
-                    "PKGj requires unsafe mode to be enabled in HENkaku "
-                    "settings!");
+                    "PKGj requiere que el modo Homebrew inseguro este "
+                    "habilitado en los ajustes de HENkaku!");
 
         Downloader downloader;
 
@@ -1147,10 +1147,10 @@ int main()
         downloader.error = [](const std::string& error)
         {
             // FIXME this runs on the wrong thread
-            pkgi_dialog_error(("Download failure: " + error).c_str());
+            pkgi_dialog_error(("Descarga fallida: " + error).c_str());
         };
 
-        LOG("started");
+        LOG("iniciado");
 
         config = pkgi_load_config();
         pkgi_dialog_init();
@@ -1179,13 +1179,13 @@ int main()
                     20.0f,
                     0,
                     io.Fonts->GetGlyphRangesDefault()))
-            throw std::runtime_error("failed to load ltn0.pvf");
+            throw std::runtime_error("error al cargar ltn0.pvf");
         if (!io.Fonts->AddFontFromFileTTF(
                     "sa0:/data/font/pvf/jpn0.pvf",
                     20.0f,
                     0,
                     io.Fonts->GetGlyphRangesJapanese()))
-            throw std::runtime_error("failed to load jpn0.pvf");
+            throw std::runtime_error("error al cargar jpn0.pvf");
         io.Fonts->GetTexDataAsRGBA32((uint8_t**)&pixels, &width, &height);
         vita2d_texture* font_texture =
                 vita2d_create_empty_texture(width, height);
@@ -1242,7 +1242,7 @@ int main()
                     if (item)
                         item->presence = PresenceUnknown;
                     else
-                        LOGF("couldn't find {} for refresh",
+                        LOGF("imposible encontrar {} para refrescar",
                              content_to_refresh);
                     content_to_refresh.clear();
                 }
@@ -1320,7 +1320,7 @@ int main()
                     switch (mres)
                     {
                     case MenuResultSearch:
-                        pkgi_dialog_input_text("Search", search_text);
+                        pkgi_dialog_input_text("Buscar", search_text);
                         break;
                     case MenuResultSearchClear:
                         search_active = 0;
@@ -1384,10 +1384,10 @@ int main()
     }
     catch (const std::exception& e)
     {
-        LOGF("Error in main: {}", e.what());
+        LOGF("Error en main: {}", e.what());
         state = StateError;
         pkgi_snprintf(
-                error_state, sizeof(error_state), "Fatal error: %s", e.what());
+                error_state, sizeof(error_state), "Error fatal: %s", e.what());
 
         pkgi_input input;
         while (pkgi_update(&input))
@@ -1399,6 +1399,6 @@ int main()
         pkgi_end();
     }
 
-    LOG("finished");
+    LOG("finalizado");
     pkgi_end();
 }

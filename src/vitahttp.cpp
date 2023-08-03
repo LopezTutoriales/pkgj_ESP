@@ -29,7 +29,7 @@ VitaHttp::~VitaHttp()
 {
     if (_http)
     {
-        LOG("http close");
+        LOG("http cerrado");
         sceHttpDeleteRequest(_http->req);
         sceHttpDeleteConnection(_http->conn);
         sceHttpDeleteTemplate(_http->tmpl);
@@ -40,9 +40,9 @@ VitaHttp::~VitaHttp()
 void VitaHttp::start(const std::string& url, uint64_t offset)
 {
     if (_http)
-        throw HttpError("HTTP connection already started");
+        throw HttpError("Conexion HTTP ya iniciada");
 
-    LOG("http get");
+    LOG("obtener http");
 
     pkgi_http* http = NULL;
     for (size_t i = 0; i < 4; i++)
@@ -55,18 +55,18 @@ void VitaHttp::start(const std::string& url, uint64_t offset)
     }
 
     if (!http)
-        throw HttpError("internal error: too many simultaneous http requests");
+        throw HttpError("error interno: muchas solicitudes http simultaneas");
 
     int tmpl = -1;
     int conn = -1;
     int req = -1;
 
-    LOGF("starting http GET request for {}", url);
+    LOGF("iniciando solicitud http GET para {}", url);
 
     if ((tmpl = sceHttpCreateTemplate(
                  PKGI_USER_AGENT, SCE_HTTP_VERSION_1_1, SCE_TRUE)) < 0)
         throw HttpError(fmt::format(
-                "sceHttpCreateTemplate failed: {:#08x}",
+                "Fallo sceHttpCreateTemplate: {:#08x}",
                 static_cast<uint32_t>(tmpl)));
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -78,7 +78,7 @@ void VitaHttp::start(const std::string& url, uint64_t offset)
     if ((conn = sceHttpCreateConnectionWithURL(tmpl, url.c_str(), SCE_FALSE)) <
         0)
         throw HttpError(fmt::format(
-                "sceHttpCreateConnectionWithURL failed: {:#08x}",
+                "Fallo sceHttpCreateConnectionWithURL: {:#08x}",
                 static_cast<uint32_t>(conn)));
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -89,7 +89,7 @@ void VitaHttp::start(const std::string& url, uint64_t offset)
     if ((req = sceHttpCreateRequestWithURL(
                  conn, SCE_HTTP_METHOD_GET, url.c_str(), 0)) < 0)
         throw HttpError(fmt::format(
-                "sceHttpCreateRequestWithURL failed: {:#08x}",
+                "Fallo sceHttpCreateRequestWithURL: {:#08x}",
                 static_cast<uint32_t>(req)));
     BOOST_SCOPE_EXIT_ALL(&)
     {
@@ -104,9 +104,9 @@ void VitaHttp::start(const std::string& url, uint64_t offset)
         char range[64];
         pkgi_snprintf(range, sizeof(range), "bytes=%llu-", offset);
         if ((err = sceHttpAddRequestHeader(
-                     req, "Range", range, SCE_HTTP_HEADER_ADD)) < 0)
+                     req, "Rango", range, SCE_HTTP_HEADER_ADD)) < 0)
             throw HttpError(fmt::format(
-                    "sceHttpAddRequestHeader failed: {:#08x}",
+                    "Fallo sceHttpAddRequestHeader: {:#08x}",
                     static_cast<uint32_t>(err)));
     }
 
@@ -116,29 +116,29 @@ void VitaHttp::start(const std::string& url, uint64_t offset)
         switch (static_cast<uint32_t>(err))
         {
         case 0x80431063:
-            err_msg = "Network error";
+            err_msg = "Error de red";
             break;
         case 0x80431068:
-            err_msg = "Network timeout";
+            err_msg = "Red - Tiempo agotado";
             break;
         case 0x80431082:
-            err_msg = "Request blocked";
+            err_msg = "Solicitud bloqueada";
             break;
         case 0x80436007:
-            err_msg = "Host not found";
+            err_msg = "Host no encontrado";
             break;
         case 0x80431084:
-            err_msg = "Proxy error";
+            err_msg = "Error de Proxy";
             break;
         case 0x80431075:
-            err_msg = "SSL error";
+            err_msg = "Error de SSL";
             break;
         default:
             err_msg = "";
         }
 
         throw formatEx<HttpError>(
-                "sceHttpSendRequest failed: {:#08x}\n{}",
+                "Fallo sceHttpSendRequest: {:#08x}\n{}",
                 static_cast<uint32_t>(err),
                 err_msg);
     }
@@ -159,7 +159,7 @@ int64_t VitaHttp::read(uint8_t* buffer, uint64_t size)
     int read = sceHttpReadData(_http->req, buffer, size);
     if (read < 0)
         throw HttpError(fmt::format(
-                "HTTP download error {:#08x}",
+                "Error descarga HTTP {:#08x}",
                 static_cast<uint32_t>(static_cast<int32_t>(read))));
     return read;
 }
@@ -170,7 +170,7 @@ void VitaHttp::abort()
     {
         const auto err = sceHttpAbortRequest(_http->req);
         if (err)
-            LOGF("abort() failed: {:#08x}", static_cast<uint32_t>(err));
+            LOGF("abortar() fallo: {:#08x}", static_cast<uint32_t>(err));
     }
 }
 
@@ -183,17 +183,17 @@ int64_t VitaHttp::get_length()
     res = sceHttpGetResponseContentLength(_http->req, &content_length);
     if (res < 0)
         throw HttpError(fmt::format(
-                "sceHttpGetResponseContentLength failed: {:#08x}",
+                "Fallo sceHttpGetResponseContentLength: {:#08x}",
                 static_cast<uint32_t>(res)));
     if (res == (int)SCE_HTTP_ERROR_NO_CONTENT_LENGTH ||
         res == (int)SCE_HTTP_ERROR_CHUNK_ENC)
     {
-        LOG("http response has no content length (or chunked "
-            "encoding)");
+        LOG("respuesta http sin contenido (o codificacion "
+            "fragmentada)");
         return 0;
     }
 
-    LOGF("http response length = {}", content_length);
+    LOGF("medida respuesta http = {}", content_length);
     return content_length;
 }
 
@@ -203,7 +203,7 @@ int VitaHttp::get_status()
     int status;
     if ((res = sceHttpGetStatusCode(_http->req, &status)) < 0)
         throw HttpError(fmt::format(
-                "sceHttpGetStatusCode failed: {:#08x}",
+                "Fallo sceHttpGetStatusCode: {:#08x}",
                 static_cast<uint32_t>(res)));
 
     return status;
@@ -217,10 +217,10 @@ void VitaHttp::check_status()
 
     const auto status = get_status();
 
-    LOGF("http status code = {}", status);
+    LOGF("codigo estado http = {}", status);
 
     if (status != 200 && status != 206)
-        throw HttpError(fmt::format("bad http status: {}", status));
+        throw HttpError(fmt::format("mal estado http: {}", status));
 }
 
 VitaHttp::operator bool() const
